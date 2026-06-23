@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>کارگذاری بیمه</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+<style>
+body{margin:0;font-family:Vazirmatn;background:#eef4ff;color:#0b2b6b}
+
+/* HEADER */
+.header{
+  background:#0b2b6b;color:#fff;
+  padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+button{cursor:pointer}
+
+/* BUTTONS */
+.btn{background:#1848a0;color:#fff;border:0;padding:8px 14px;border-radius:8px}
+.btn2{background:#fff;color:#0b2b6b;border:0;padding:8px 14px;border-radius:8px}
+
+/* LAYOUT */
+.page{display:none}
+.active{display:block}
+
+.container{max-width:1000px;margin:20px auto;padding:10px}
+
+/* FORM */
+.card{
+  background:#fff;border-radius:16px;padding:20px;margin-bottom:15px;
+  box-shadow:0 8px 30px rgba(0,0,0,.05)
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,select,textarea{
+  width:100%;padding:10px;border:1px solid #c8d8f0;border-radius:10px
+}
+
+/* LIST */
+.item{
+  background:#fff;padding:12px;margin:8px 0;
+  border-radius:10px;cursor:pointer;border-right:4px solid #1848a0
+}
+.item:hover{background:#f2f6ff}
+
+/* DETAIL */
+.detail{
+  background:#fff;padding:15px;border-radius:12px;margin-top:10px
+}
+
+/* LOGIN */
+.login{
+  max-width:400px;margin:80px auto;background:#fff;padding:25px;border-radius:15px
+}
+</style>
+</head>
+
+<body>
+
+<!-- FORM PAGE -->
+<div id="formPage" class="page active">
+
+<div class="header">
+  <div>کارگذاری بیمه</div>
+  <button class="btn2" onclick="goLogin()">پنل مدیریت</button>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h3>فرم همکاری</h3>
+
+<div class="grid">
+<input id="name" placeholder="نام">
+<input id="lastname" placeholder="نام خانوادگی">
+<input id="nid" placeholder="کد ملی">
+<input id="birth" placeholder="تاریخ تولد">
+<input id="phone" placeholder="موبایل">
+
+<select id="city">
+<option>تهران</option>
+<option>مشهد</option>
+<option>اصفهان</option>
+</select>
+
+<select id="edu">
+<option>دیپلم</option>
+<option>لیسانس</option>
+<option>فوق لیسانس</option>
+</select>
+</div>
+
+<textarea id="desc" placeholder="توضیحات"></textarea>
+
+<button class="btn" onclick="submit()">ارسال</button>
+
+</div>
+
+</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="page">
+
+<div class="login">
+<h3>ورود مدیریت</h3>
+<input id="user" placeholder="نام کاربری">
+<input id="pass" type="password" placeholder="رمز">
+<button class="btn" onclick="login()">ورود</button>
+</div>
+
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashPage" class="page">
+
+<div class="header">
+  <div>پنل مدیریت</div>
+  <button class="btn2" onclick="logout()">خروج</button>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h3>لیست متقاضیان</h3>
+<div id="list"></div>
+</div>
+
+<div class="detail" id="detail"></div>
+
+</div>
+</div>
+
+<script>
+
+const API = "/api/customers";
+
+/* NAV */
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goLogin(){show('loginPage')}
+
+/* SUBMIT */
+async function submit(){
+  const data = {
+    id:Date.now(),
+    name,lastname,nid,birth,phone,city,edu,desc
+  };
+
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+
+  alert("ارسال شد");
+}
+
+/* LOAD LIST */
+async function load(){
+  const res = await fetch(API);
+  const data = await res.json();
+
+  list.innerHTML = data.map(x=>`
+    <div class="item" onclick="showDetail(${x.id})">
+      ${x.name} ${x.lastname} - ${x.phone}
+    </div>
+  `).join("");
+}
+
+/* DETAIL */
+async function showDetail(id){
+  const res = await fetch(API);
+  const data = await res.json();
+  const x = data.find(i=>i.id==id);
+
+  detail.innerHTML = `
+    <h3>${x.name} ${x.lastname}</h3>
+    <p>کد ملی: ${x.nid}</p>
+    <p>موبایل: ${x.phone}</p>
+    <p>شهر: ${x.city}</p>
+    <p>تحصیلات: ${x.edu}</p>
+    <p>${x.desc}</p>
+  `;
+}
+
+/* LOGIN (ساده) */
+function login(){
+  if(user.value=="admin" && pass.value=="1234"){
+    show('dashPage')
+    load()
+  }else{
+    alert("اشتباه")
+  }
+}
+
+function logout(){
+  show('formPage')
+}
+
+load();
+
+</script>
+
+</body>
+</html>
